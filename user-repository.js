@@ -20,19 +20,9 @@ const User = Schema("User", {
   },
 });
 export class UserRepository {
-  static create({ username, password }) {
-    if (typeof username !== "string") {
-      throw new Error("username must be a string");
-    }
-    if (username.length < 3) {
-      throw new Error("username must be at least 3 characters long");
-    }
-    if (typeof password !== "string") {
-      throw new Error("password must be a string");
-    }
-    if (password.length < 3) {
-      throw new Error("password must be at least 3 characters long");
-    }
+  static async create({ username, password }) {
+    Validation.username(username);
+    Validation.password(password);
     const user = User.findOne({ username });
     if (user) {
       throw new Error("user already exists");
@@ -41,11 +31,44 @@ export class UserRepository {
     User.create({
       _id: id,
       username,
-      password: bcrypt.hashSync(password, SALT_ROUNDS),
+      password: await bcrypt.hash(password, SALT_ROUNDS),
     }).save();
 
     return id;
   }
 
-  static login({ username, password }) {}
+  static async login({ username, password }) {
+    Validation.username(username);
+    Validation.password(password);
+    const user = User.findOne({ username });
+
+    if (!user) {
+      throw new Error("user not found");
+    }
+    const isValid = bcrypt.compare(password, user.password);
+    if (!isValid) {
+      throw new Error("invalid credentials");
+    }
+    const { password: _, ...publicUser } = user;
+    return publicUser;
+  }
+}
+
+class Validation {
+  static username(username) {
+    if (typeof username !== "string") {
+      throw new Error("username must be a string");
+    }
+    if (username.length < 3) {
+      throw new Error("username must be at least 3 characters long");
+    }
+  }
+  static password(password) {
+    if (typeof password !== "string") {
+      throw new Error("password must be a string");
+    }
+    if (password.length < 3) {
+      throw new Error("password must be at least 3 characters long");
+    }
+  }
 }

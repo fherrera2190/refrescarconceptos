@@ -1,4 +1,5 @@
-# Node:sesión de usuario, autenticación, autorización
+
+# Node:sesión de usuario, autenticación, autorización (Midu)
 
 1. Instalación del proyecto
 2. Usuario en base de datos

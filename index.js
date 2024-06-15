@@ -3,19 +3,28 @@ import { PORT } from "./config.js";
 import { UserRepository } from "./user-repository.js";
 
 const app = express();
-app.get("/", (req, res) => {
-  res.send("<h1>Hello World!</h1>");
-});
-app.use(express.json());
+app.set("view engine", "ejs");
 
-app.post("/login", (req, res) => {
-  res.json({ user: "nemesis" });
+app.use(express.json());
+app.get("/", (req, res) => {
+  res.render("example", { name: "Fernando" });
 });
-app.post("/register", (req, res) => {
+
+app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const id = UserRepository.create({ username, password });
+    const user = await UserRepository.login({ username, password });
+    res.json({ user });
+  } catch (err) {
+    res.status(401).json({ error: err.message });
+  }
+});
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const id = await UserRepository.create({ username, password });
     res.json({ id });
   } catch (err) {
     res.status(400).json({ error: err.message });
